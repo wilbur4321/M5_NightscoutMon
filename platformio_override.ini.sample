@@ -1,0 +1,7 @@
+[platformio]
+default_envs = m5stack-core2
+
+[env:m5stack-core2]
+upload_port=COM3
+monitor_port=COM3
+monitor_speed=115200

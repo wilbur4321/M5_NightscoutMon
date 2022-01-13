@@ -34,3 +34,7 @@
 # vscode and PlatformIO
 .vscode
 .pio
+
+# allow certain local changes easily
+platformio_override.ini
+SD/M5NS_override.INI
