@@ -2429,7 +2429,6 @@ void setup() {
 
     #ifdef ARDUINO_M5STACK_Core2
       cfg.vibration_mode = 0; // no vibration on Core2 for now
-      cfg.LED_strip_mode = 0; // no LED strip on Core2 for now
       cfg.LED_strip_pin = 25; // just for sure
       cfg.LED_strip_count = 10; // just for sure
       cfg.LED_strip_brightness = 2; // just for sure
@@ -2446,6 +2445,7 @@ void setup() {
       MD.writeString("*M5NS*");
     }
 
+    pixels.setPin(cfg.LED_strip_pin);
     pixels.begin();
     pixels.clear(); // clear M5Stack Fire internal LEDs
     pixels.show();
