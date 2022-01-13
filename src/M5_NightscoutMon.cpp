@@ -2623,8 +2623,10 @@ void setup() {
 
 // the loop routine runs over and over again forever
 void loop() {
-  if(!cfg.disable_web_server || is_task_bootstrapping) {
+  if(is_task_bootstrapping) {
     dnsServer.processNextRequest();
+  }
+  if(!cfg.disable_web_server || is_task_bootstrapping) {
     w3srv.handleClient();
   }
   delay(20); // was 10
