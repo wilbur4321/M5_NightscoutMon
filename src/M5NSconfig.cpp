@@ -210,7 +210,6 @@ void readConfiguration(const char *iniFilename, tConfig *cfg) {
     
   File dstFil;
   IniFile ini(iniFilename); //(uint8_t)"/M5NS.INI"
-  bool iniFileRead = false;
   
   if (!ini.open()) {
     Serial.print("Ini file ");

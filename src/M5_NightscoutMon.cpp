@@ -59,7 +59,7 @@
 Adafruit_NeoPixel pixels(10, 15, NEO_GRB + NEO_KHZ800);
 
 #include "Free_Fonts.h"
-#include "IniFile.h"
+#include <IniFile.h>
 #include "M5NSconfig.h"
 #include "M5NSWebConfig.h"
 
