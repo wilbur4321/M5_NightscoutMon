@@ -271,7 +271,9 @@ void handleRoot() {
     message += "LED strip pin: <b>"; message += cfg.LED_strip_pin; message += "</b> <a href=\"edititem?param=led_strip\">[edit]</a><br />\r\n";
     message += "LED strip count: <b>"; message += cfg.LED_strip_count; message += "</b> <a href=\"edititem?param=led_strip\">[edit]</a><br />\r\n";
     message += "LED strip brightness: <b>"; message += cfg.LED_strip_brightness; message += "%</b> <a href=\"edititem?param=led_strip\">[edit]</a><br />\r\n";
-    message += "Vibration motor unit: <b>"; message += cfg.vibration_mode?"YES":"NO"; message += "</b> <a href=\"switch?param=vibration_mode\">[change]</a><br />\r\n";
+  #endif
+  message += "Vibration motor unit: <b>"; message += cfg.vibration_mode?"YES":"NO"; message += "</b> <a href=\"switch?param=vibration_mode\">[change]</a><br />\r\n";
+  #ifndef ARDUINO_M5STACK_Core2
     message += "Vibration motor pin: <b>"; message += cfg.vibration_pin; message += "</b> <a href=\"edititem?param=vibration_motor\">[edit]</a><br />\r\n";
     message += "Vibration motor strength: <b>"; message += cfg.vibration_strength; message += "</b> <a href=\"edititem?param=vibration_motor\">[edit]</a><br />\r\n";
     message += "Micro Dot pHAT on I2C port: <b>"; message += cfg.micro_dot_pHAT?"YES":"NO"; message += "</b> <a href=\"switch?param=micro_dot_pHAT\">[change]</a><br />\r\n";
@@ -553,13 +555,13 @@ void handleSwitchConfig() {
           pixels.show();
         }
       }
-      #ifdef ARDUINO_M5STACK_Core2
-        if(String(w3srv.arg(i)).equals("vibration_mode")) {
-          cfg.vibration_mode++;
-          if(cfg.vibration_mode>1) {
-            cfg.vibration_mode = 0;
-          }
+      if(String(w3srv.arg(i)).equals("vibration_mode")) {
+        cfg.vibration_mode++;
+        if(cfg.vibration_mode>1) {
+          cfg.vibration_mode = 0;
         }
+      }
+      #ifdef ARDUINO_M5STACK_Core2
         if(String(w3srv.arg(i)).equals("micro_dot_pHAT")) {
           cfg.micro_dot_pHAT++;
           if(cfg.micro_dot_pHAT>1) {
@@ -710,15 +712,15 @@ void handleEditConfigItem() {
         message += "1-100%, for more than 10 LEDs use 10%, 5% or even less otherwise load current will crash the M5Stack<br />\r\n";
       #endif
     }
-    if(String(w3srv.arg(0)).equals("vibration_motor")) {
-      #ifndef ARDUINO_M5STACK_Core2
+    #ifndef ARDUINO_M5STACK_Core2
+      if(String(w3srv.arg(0)).equals("vibration_motor")) {
         message += "Vibration motor unit setup:<br />\r\n";
         message += "Vibration motor pin: <input type=\"text\" name=\"vibration_pin\" value=\"" + String(cfg.vibration_pin) + "\" size=\"3\" maxlength=\"3\"> <br />\r\n";
         message += "26 = black PORT B connector, 17 = blue PORT C connector, DO NOT USE pin 21 = red PORT A connector (collides with I2C) <br />\r\n";
         message += "Vibration motor strength: <input type=\"text\" name=\"vibration_strength\" value=\"" + String(cfg.vibration_strength) + "\" size=\"3\" maxlength=\"3\"> <br />\r\n";
         message += "0-1023, recommended range is 256-512, hig values can crash the M5Stack due to load current <br />\r\n";
-      #endif
-    }
+      }
+    #endif
     if(String(w3srv.arg(0)).equals("wlans")) {
       message += "Wifi LAN SSIDs + passwords:<br />\r\n";
       for(int i=1; i<10; i++) {
@@ -883,13 +885,13 @@ void handleGetEditConfigItem() {
       if(String(w3srv.argName(i)).equals("LED_strip_brightness")) {
         cfg.LED_strip_brightness = String(w3srv.arg(i)).toInt();
       }
+      if(String(w3srv.argName(i)).equals("vibration_pin")) {
+        cfg.vibration_pin = String(w3srv.arg(i)).toInt();
+      }
+      if(String(w3srv.argName(i)).equals("vibration_strength")) {
+        cfg.vibration_strength = String(w3srv.arg(i)).toInt();
+      }
     #endif
-    if(String(w3srv.argName(i)).equals("vibration_pin")) {
-      cfg.vibration_pin = String(w3srv.arg(i)).toInt();
-    }
-    if(String(w3srv.argName(i)).equals("vibration_strength")) {
-      cfg.vibration_strength = String(w3srv.arg(i)).toInt();
-    }
     if(String(w3srv.argName(i)).startsWith("wlanssid")) {
       tmpStr = String(w3srv.argName(i));
       tmpStr.remove(0, 8);
@@ -1040,11 +1042,13 @@ void handleSaveConfig() {
       dstFil.print("LED_strip_pin = "); dstFil.print(cfg.LED_strip_pin); dstFil.print("\r\n");
       dstFil.print("LED_strip_count = "); dstFil.print(cfg.LED_strip_count); dstFil.print("\r\n");
       dstFil.print("LED_strip_brightness = "); dstFil.print(cfg.LED_strip_brightness); dstFil.print("\r\n");
-      dstFil.print("vibration_mode = "); dstFil.print(cfg.vibration_mode); dstFil.print("\r\n");
     #endif
-    dstFil.print("vibration_pin = "); dstFil.print(cfg.vibration_pin); dstFil.print("\r\n");
-    dstFil.print("vibration_strength = "); dstFil.print(cfg.vibration_strength); dstFil.print("\r\n");
-    dstFil.print("micro_dot_pHAT = "); dstFil.print(cfg.micro_dot_pHAT); dstFil.print("\r\n");
+    dstFil.print("vibration_mode = "); dstFil.print(cfg.vibration_mode); dstFil.print("\r\n");
+    #ifndef ARDUINO_M5STACK_Core2
+      dstFil.print("vibration_strength = "); dstFil.print(cfg.vibration_strength); dstFil.print("\r\n");
+      dstFil.print("vibration_pin = "); dstFil.print(cfg.vibration_pin); dstFil.print("\r\n");
+      dstFil.print("micro_dot_pHAT = "); dstFil.print(cfg.micro_dot_pHAT); dstFil.print("\r\n");
+    #endif
     dstFil.print("disable_web_server = "); dstFil.print(cfg.disable_web_server); dstFil.print("\r\n");
     dstFil.print("\r\n");
     dstFil.print("developer_mode = "); dstFil.print(cfg.dev_mode); dstFil.print("\r\n");

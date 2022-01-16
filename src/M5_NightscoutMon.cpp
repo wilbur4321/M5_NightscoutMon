@@ -84,9 +84,11 @@ String M5NSversion("2021060101");
   #define MODE_SPK 1
 #endif
 
-#define VIBfreq 10000
-#define VIBchannel 14
-#define VIBresolution 10
+#ifndef ARDUINO_M5STACK_Core2
+  #define VIBfreq 10000
+  #define VIBchannel 14
+  #define VIBresolution 10
+#endif
 
 // The UDP library class
 WiFiUDP udp;
@@ -373,9 +375,26 @@ void play_tone(uint16_t frequency, uint32_t duration, uint8_t volume) {
     music_data[i]=32767.0*sin(interval*i)*volMul; // 16383.0+ /(101-volume)
   }
   music_data[data_length-1]=32767;
-  // Serial.print("finish fill music data, start play "); Serial.println(millis());
+  // Serial.print("finish fill music data, start play+vibrate "); Serial.println(millis());
+
+  if(cfg.vibration_mode != 0) {
+    // ledcSetup(0, 10000, 10);
+    // ledcAttachPin(26, 0);
+    // delay(10);
+    // ledcWrite(0, 512);
+    M5.Axp.SetLDOVoltage(3, 3300);
+    M5.Axp.SetLDOEnable(3, true);
+  }
+
   i2s_write(Speak_I2S_NUMBER, music_data, data_length*2, &bytes_written, portMAX_DELAY);
-  // Serial.print("finish play "); Serial.println(millis());
+
+  if(cfg.vibration_mode != 0) {
+    if(duration<180) // minimum vibration lenght is 200 ms
+      delay(180-duration);
+    M5.Axp.SetLDOEnable(3, false);
+  }
+
+  // Serial.print("finish play+vibrate "); Serial.println(millis());
 }   
 
 #else    // M5Stack BASIC audio functions
@@ -434,9 +453,6 @@ void play_tone(uint16_t frequency, uint32_t duration, uint8_t volume) {
   }
   play_music_data(data_length, volume);
   if(cfg.vibration_mode != 0) {
-    ledcSetup(VIBchannel, VIBfreq, VIBresolution);
-    ledcAttachPin(cfg.vibration_pin, VIBchannel);
-    delay(10);
     if(duration<180) // minimum vibration lenght is 200 ms
       delay(180-duration);
     ledcWrite(VIBchannel, 0);
@@ -2428,18 +2444,12 @@ void setup() {
     // cfg.dev_mode = 0;
 
     #ifdef ARDUINO_M5STACK_Core2
-      cfg.vibration_mode = 0; // no vibration on Core2 for now
-      cfg.LED_strip_pin = 25; // just for sure
+      cfg.LED_strip_pin = 25; // built-in, so hard-code it
       cfg.LED_strip_count = 10; // just for sure
       cfg.LED_strip_brightness = 2; // just for sure
       cfg.micro_dot_pHAT = 0; // no Micro Dot pHAT on Core2 for now
     #endif
     
-    if(cfg.vibration_mode != 0) {
-      ledcSetup(VIBchannel, VIBfreq, VIBresolution);
-      ledcAttachPin(cfg.vibration_pin, VIBchannel);
-    }
-
     if(cfg.micro_dot_pHAT != 0) {
       MD.begin();
       MD.writeString("*M5NS*");
