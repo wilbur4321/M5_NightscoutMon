@@ -1,3 +1,4 @@
+#ifndef ARDUINO_M5STACK_Core2
 /*
 	DHT12.h - Library for DHT12 sensor.
 	v0.0.1 Beta
@@ -26,4 +27,5 @@ class DHT12
 		uint8_t _scale;
 };
 
+#endif
 #endif

@@ -1,3 +1,4 @@
+#ifndef ARDUINO_M5STACK_Core2
 #ifndef __SHT3X_H
 #define __HT3X_H
 
@@ -24,4 +25,5 @@ private:
 };
 
 
+#endif
 #endif

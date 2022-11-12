@@ -64,11 +64,14 @@ Adafruit_NeoPixel pixels(10, 15, NEO_GRB + NEO_KHZ800);
 #include "M5NSWebConfig.h"
 
 #include <Wire.h>     //The DHT12 uses I2C comunication.
+
+#ifndef ARDUINO_M5STACK_Core2
 #include "DHT12.h"
 DHT12 dht12;
 
 #include "SHT3X.h"
 SHT3X sht30;
+#endif
 
 #include "microdot.h"
 MicroDot MD;
@@ -1725,6 +1728,17 @@ void drawSegment(int x, int y, int r1, int r2, float a, int col)
   M5.Lcd.fillTriangle(x1,y1,x2,y2,x3,y3,col);
 }
 
+void temp_to_cfg_units(float *ptmp) {
+  switch(cfg.temperature_unit) {
+    case 2: //K
+      (*ptmp) += 273.15;
+      break;
+    case 3: //F
+      (*ptmp) = (*ptmp) * 1.8 + 32.0;
+      break;
+  }
+}
+
 void draw_page() {
   char tmpstr[255];
   
@@ -2127,56 +2141,54 @@ void draw_page() {
         M5.Lcd.drawString(String(sensorDifMin)+" min", 34, 53, GFXFF);
       }
 
+      // get temperature and humidity
       #ifdef ARDUINO_M5STACK_Core2
-        // no temeperature and humidity readings (yet)
+        float tmprc=0.01;
+        M5.IMU.getTempData(&tmprc);
+        temp_to_cfg_units(&tmprc);
       #else
-        // get temperature and humidity
         float tmprc=dht12.readTemperature(cfg.temperature_unit);
         float humid=dht12.readHumidity();
         if(tmprc==float(0.01) || tmprc==float(0.02) || tmprc==float(0.03)) { // dht12 error, lets try sht30
           if(sht30.get()==0){
             tmprc = sht30.cTemp;
             humid = sht30.humidity;
-            switch(cfg.temperature_unit) {
-              case 2: //K
-                tmprc += 273.15;
-                break;
-              case 3: //F
-                tmprc = tmprc * 1.8 + 32.0;
-                break;
-            }
+            temp_to_cfg_units(&tmprc);
           } else {
             tmprc = float(0.04);
             humid = float(0.04);
           }
         }
-        // display temperature
-        // Serial.print("tmprc="); Serial.println(tmprc);
-        M5.Lcd.fillRect(0, 180, 88, 30, TFT_BLACK);
-        if(tmprc!=float(0.01) && tmprc!=float(0.02) && tmprc!=float(0.03) && tmprc!=float(0.04)) { // not an error
-          M5.Lcd.setTextDatum(BL_DATUM);
-          M5.Lcd.setFreeFont(FSS12); // CF_RT24
-          M5.Lcd.setTextColor(TFT_LIGHTGREY, TFT_BLACK);
-          String tmprcStr=String(tmprc, 1);
-          int tw=M5.Lcd.textWidth(tmprcStr);
-          M5.Lcd.drawString(tmprcStr, 7, 210, GFXFF);
-          M5.Lcd.setFreeFont(FSS9);
-          int ow=M5.Lcd.textWidth("o");
-          M5.Lcd.drawString("o", 7+tw+2, 199, GFXFF);
-          M5.Lcd.setFreeFont(FSS12);
-          switch(cfg.temperature_unit) {
-            case 1:
-              M5.Lcd.drawString("C", 7+tw+ow+4, 210, GFXFF);
-              break;
-            case 2:
-              M5.Lcd.drawString("K", 7+tw+ow+4, 210, GFXFF);
-              break;
-            case 3:
-              M5.Lcd.drawString("F", 7+tw+ow+4, 210, GFXFF);
-              break;
-          }
+      #endif
+
+      // display temperature
+      // Serial.print("tmprc="); Serial.println(tmprc);
+      M5.Lcd.fillRect(0, 180, 88, 30, TFT_BLACK);
+      if(tmprc!=float(0.01) && tmprc!=float(0.02) && tmprc!=float(0.03) && tmprc!=float(0.04)) { // not an error
+        M5.Lcd.setTextDatum(BL_DATUM);
+        M5.Lcd.setFreeFont(FSS12); // CF_RT24
+        M5.Lcd.setTextColor(TFT_LIGHTGREY, TFT_BLACK);
+        String tmprcStr=String(tmprc, 1);
+        int tw=M5.Lcd.textWidth(tmprcStr);
+        M5.Lcd.drawString(tmprcStr, 7, 210, GFXFF);
+        M5.Lcd.setFreeFont(FSS9);
+        int ow=M5.Lcd.textWidth("o");
+        M5.Lcd.drawString("o", 7+tw+2, 199, GFXFF);
+        M5.Lcd.setFreeFont(FSS12);
+        switch(cfg.temperature_unit) {
+          case 1:
+            M5.Lcd.drawString("C", 7+tw+ow+4, 210, GFXFF);
+            break;
+          case 2:
+            M5.Lcd.drawString("K", 7+tw+ow+4, 210, GFXFF);
+            break;
+          case 3:
+            M5.Lcd.drawString("F", 7+tw+ow+4, 210, GFXFF);
+            break;
         }
-        
+      }
+      
+      #ifndef ARDUINO_M5STACK_Core2
         // display humidity
         // Serial.print("humid="); Serial.println(humid);
         M5.Lcd.fillRect(250, 185, 70, 25, TFT_BLACK);
